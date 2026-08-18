@@ -1,0 +1,261 @@
+diff --git a/ATARVA/baseline.py b/ATARVA/baseline.py
+index f66669e..9fa19ea 100644
+--- a/ATARVA/baseline.py
++++ b/ATARVA/baseline.py
+@@ -1,4 +1,5 @@
+ from ATARVA.locus_utils import process_locus
++from ATARVA import readdump
+ from ATARVA.cstag_utils import parse_cstag
+ from ATARVA.cigar_utils import parse_cigar_tag
+ from ATARVA.operation_utils import convert_eqx_read
+@@ -48,6 +49,7 @@ def locus_processor(global_loci_keys, global_loci_ends, global_loci_variations,
+             else:
+                 ALT = '.'
+ 
++            readdump.write(Chrom, locus_key, global_loci_info, global_loci_variations, [reads_of_homozygous], 'LENGTH')
+             lower,upper = confidence_interval(homo_alen_list)
+ 
+             if ALT != '.':
+@@ -74,6 +76,7 @@ def locus_processor(global_loci_keys, global_loci_ends, global_loci_variations,
+                 }
+                 tqdm.write(skip_messages.get(skip_point, 'Locus skipped due to less number of significant snps based on user\'s parameter.'))
+         elif category == 3:
++            readdump.write(Chrom, locus_key, global_loci_info, global_loci_variations, haplotypes, 'SNP')
+             genotypes = []
+             allele_count = []
+             ALT_seqs = []
+@@ -137,6 +140,7 @@ def cooper(bam_file, tbx_file, ref_file, aln_format, contigs, mapq_threshold, ou
+ 
+     # Open the output file
+     out = open(out_filename, 'w')
++    readdump.init(outfile, tidx)
+     
+     # Write the VCF header if tidx is -1 or 0
+     if tidx == -1 or tidx == 0:
+@@ -356,7 +360,7 @@ def cooper(bam_file, tbx_file, ref_file, aln_format, contigs, mapq_threshold, ou
+                     read_loci_variations[locus_key] = {'halen': locus_len, 'alen': locus_len, 'rlen': locus_len, 'seq': []}
+ 
+                     if locus_key not in global_loci_variations:
+-                        global_loci_variations[locus_key] = {'rlen': locus_len, 'reads': [], 'read_allele': {}, 'read_sequence': {}, 'read_tag':[], 'read_meth': {}}
++                        global_loci_variations[locus_key] = {'rlen': locus_len, 'reads': [], 'read_allele': {}, 'read_sequence': {}, 'read_name': {}, 'read_tag':[], 'read_meth': {}}
+                         global_loci_info[locus_key] = row
+ 
+                         # adding the locus key when it is first encountered
+@@ -459,6 +463,7 @@ def cooper(bam_file, tbx_file, ref_file, aln_format, contigs, mapq_threshold, ou
+                 global_loci_variations[locus_key]['reads'].append(read_index)
+                 global_loci_variations[locus_key]['read_allele'][read_index] = [read_loci_variations[locus_key]['halen'], read_loci_variations[locus_key]['alen']]
+                 global_loci_variations[locus_key]['read_sequence'][read_index] = read_loci_variations[locus_key]['seq']
++                global_loci_variations[locus_key]['read_name'][read_index] = read.query_name
+                 global_loci_variations[locus_key]['read_tag'].append(hp_tag)
+ 
+         while global_loci_ends:
+@@ -483,6 +488,7 @@ def cooper(bam_file, tbx_file, ref_file, aln_format, contigs, mapq_threshold, ou
+     bam.close()
+     ref.close()
+     tbx.close()
++    readdump.close()
+     out.close()
+ 
+ 
+@@ -510,6 +516,7 @@ def mini_cooper(bam_file, tbx_file, ref_file, aln_format, contigs, mapq_threshol
+     
+     # Open the output file
+     out = open(out_filename, 'w')
++    readdump.init(outfile, tidx)
+     
+     # Write the VCF header if tidx is -1 or 0
+     if tidx == -1 or tidx == 0:
+@@ -681,7 +688,7 @@ def mini_cooper(bam_file, tbx_file, ref_file, aln_format, contigs, mapq_threshol
+                     read_loci_variations[locus_key] = {'halen': locus_len, 'alen': locus_len, 'rlen': locus_len, 'seq': []}
+ 
+                     if locus_key not in global_loci_variations:
+-                        global_loci_variations[locus_key] = {'rlen': locus_len, 'reads': [], 'read_allele': {}, 'read_sequence': {}, 'read_tag':[], 'read_meth': {}}
++                        global_loci_variations[locus_key] = {'rlen': locus_len, 'reads': [], 'read_allele': {}, 'read_sequence': {}, 'read_name': {}, 'read_tag':[], 'read_meth': {}}
+                         global_loci_info[locus_key] = row
+                         global_loci_ends.append(locus_end)
+                         global_loci_keys.append(locus_key)
+@@ -777,6 +784,7 @@ def mini_cooper(bam_file, tbx_file, ref_file, aln_format, contigs, mapq_threshol
+                     global_loci_variations[locus_key]['reads'].append(read_index)
+                     global_loci_variations[locus_key]['read_allele'][read_index] = [read_loci_variations[locus_key]['halen'], read_loci_variations[locus_key]['alen']]
+                     global_loci_variations[locus_key]['read_sequence'][read_index] = read_loci_variations[locus_key]['seq']
++                    global_loci_variations[locus_key]['read_name'][read_index] = read.query_name
+                     global_loci_variations[locus_key]['read_tag'].append(hp_tag)
+             
+             while global_loci_ends:
+@@ -816,4 +824,5 @@ def mini_cooper(bam_file, tbx_file, ref_file, aln_format, contigs, mapq_threshol
+     ref.close()
+     tbx.close()
+     tbx2.close()
++    readdump.close()
+     out.close()
+\ No newline at end of file
+diff --git a/ATARVA/genotype.py b/ATARVA/genotype.py
+index 6e9d31e..7631175 100644
+--- a/ATARVA/genotype.py
++++ b/ATARVA/genotype.py
+@@ -46,6 +46,7 @@ def genotype_parser(subparsers):
+     optional.add_argument('--amplicon', action='store_true', help="genotype mode for targeted-sequenced samples. In this mode, the default values for `max-reads` and `flank` values are 1000 and 20 respectively. [default: False]")
+     optional.add_argument('--somatic', action='store_true', help="genotype mode for capturing mosaicism in samples. In this mode, default `max-reads` and `flank` values are same as amplicon mode. [default: False]")
+     optional.add_argument('--read-wise', action='store_true', help="Read-wise genotyping mode for BED file with dense regions. [default: False]")
++    optional.add_argument('--read-dump', action='store_true', help="write a per-read TSV (read name, allele cluster, allele length) alongside the VCF. [default: False]")
+     optional.add_argument('--loci-wise', action='store_true', help="Loci-wise genotyping mode instead of Read-wise for BED file with sparse regions. [default: False]")
+     optional.add_argument('-log', '--debug_mode', action='store_true', help="write the debug messages to log file. [default: False]")
+     optional.add_argument('-v', '--version', action='version', version=f'ATaRVa version {__version__}')
+@@ -297,6 +298,9 @@ def genotype_run(args):
+ 
+         amplicon = False
+         somatic = False
++        if args.read_dump:
++            os.environ['ATARVA_READ_DUMP'] = '1'
++
+         if args.amplicon:
+             amplicon = True
+             srs = True
+@@ -353,6 +357,19 @@ def genotype_run(args):
+                         print(*repeat_info, file=out, sep='\t')
+                 os.remove(thread_out)
+             out.close()
++
++            if args.read_dump:
++                dump_out = open(f'{out_file}.reads.tsv', 'a')
++                for tidx in range(threads)[1:]:
++                    thread_dump = f'{hid_outfile}_thread_{tidx}.reads.tsv'
++                    if not os.path.exists(thread_dump):
++                        continue
++                    with open(thread_dump, 'r') as fh:
++                        for line in fh:
++                            dump_out.write(line)
++                    os.remove(thread_dump)
++                dump_out.close()
++
+             print('Concatenation completed!! ^_^', file=sys.stderr)
+ 
+             if args.debug_mode:
+diff --git a/ATARVA/genotype_utils.py b/ATARVA/genotype_utils.py
+index c2bf5bc..b4574b6 100644
+--- a/ATARVA/genotype_utils.py
++++ b/ATARVA/genotype_utils.py
+@@ -1,4 +1,5 @@
+ from ATARVA.snp_utils import haplocluster_reads
++from ATARVA import readdump
+ from ATARVA.vcf_writer import *
+ from ATARVA.sub_operation_utils import *
+ from ATARVA.somatic_utils import *
+@@ -12,6 +13,7 @@ import stringzilla as sz
+ def homo_vcf_call(alen, read_seqs, haplotypes, DP, amplicon, motif_size, ref, contig, locus_key, global_loci_info, global_loci_variations, out, log_bool, decomp, hallele_counter, tag):
+ 
+     lower1,upper1 = confidence_interval(alen)
++    readdump.write(contig, locus_key, global_loci_info, global_loci_variations, [haplotypes], tag)
+     allele_range = f'{lower1}-{upper1},{lower1}-{upper1}'
+     ALT, allele_length, decomp_seq, repeativity = alt_sequence(read_seqs, haplotypes, amplicon, motif_size)
+     if repeativity:
+@@ -29,6 +31,8 @@ def hetero_vcf_call(haplotypes, read_seqs, amplicon, motif_size, new_alen, conti
+     chosen_snpQ = '.'
+     snp_num = '.'        
+ 
++    readdump.write(contig, locus_key, global_loci_info, global_loci_variations, haplotypes, tag)
++
+     genotypes = []
+     allele_count = []
+     ALT_seqs = []
+@@ -451,6 +455,8 @@ def analyse_genotype(contig, locus_key, global_loci_info,
+         del sorted_global_snp_list[:min_idx]
+ 
+ 
++    readdump.write(contig, locus_key, global_loci_info, global_loci_variations, haplotypes, 'SNP')
++
+     genotypes = []
+     allele_count = []
+     ALT_seqs = []
+diff --git a/ATARVA/readdump.py b/ATARVA/readdump.py
+new file mode 100644
+index 0000000..61f0347
+--- /dev/null
++++ b/ATARVA/readdump.py
+@@ -0,0 +1,86 @@
++"""
++Optional per-read output for ATaRVa.
++
++Emits one row per (locus, read) giving the read name, which allele cluster the
++read was assigned to, and that read's allele length -- i.e. the read-level data
++underlying the AL/AR/SD tags in the VCF.
++
++Enabled via the ATARVA_READ_DUMP environment variable, which `atarva genotype
++--read-dump` sets. Using an env var rather than threading a new parameter
++through cooper/mini_cooper keeps the diff small and rebase-friendly against
++upstream; the flag is the user-facing interface.
++
++Each worker process writes its own file alongside its VCF shard, following the
++same `_thread_{tidx}` naming that genotype.py already concatenates.
++"""
++
++import os
++
++_fh = None
++_seen = set()
++
++HEADER = "locus_id\tcontig\tstart\tend\tmotif\tread_name\tallele_idx\tallele_len\tphase_method\n"
++
++
++def _path(outfile, tidx):
++    if tidx == -1 or tidx == 0:
++        return f'{outfile}.reads.tsv'
++    idx = outfile.rfind('/')
++    hid = outfile[:idx + 1] + '.' + outfile[idx + 1:]
++    return f'{hid}_thread_{tidx}.reads.tsv'
++
++
++def init(outfile, tidx):
++    """Open this worker's dump file. No-op unless --read-dump was given."""
++    global _fh, _seen
++    _seen = set()
++    if os.environ.get('ATARVA_READ_DUMP') != '1':
++        _fh = None
++        return
++    _fh = open(_path(outfile, tidx), 'w')
++    if tidx == -1 or tidx == 0:
++        _fh.write(HEADER)
++
++
++def enabled():
++    return _fh is not None
++
++
++def write(contig, locus_key, global_loci_info, global_loci_variations, hap_read_lists, tag):
++    """
++    hap_read_lists: list of read-index lists, one per allele cluster.
++    Pass [reads] for a homozygous/haploid call, [c1, c2] for a heterozygous one.
++    allele_idx in the output is 1-based and matches VCF allele order.
++    """
++    if _fh is None:
++        return
++    if locus_key in _seen:          # guard against paths that fall through
++        return                       # hetero -> homo within one locus
++    row = global_loci_info.get(locus_key)
++    if row is None:
++        return
++    locus_var = global_loci_variations.get(locus_key)
++    if locus_var is None:
++        return
++
++    _seen.add(locus_key)
++    locus_id = row[5] if len(row) > 5 else '.'
++    start, end, motif = row[1], row[2], row[3]
++    names = locus_var.get('read_name', {})
++    seqs = locus_var['read_sequence']
++    method = 'SNP' if tag == 'SNP' else 'LENGTH'
++
++    for aidx, hap_reads in enumerate(hap_read_lists, start=1):
++        for rid in hap_reads:
++            seq = seqs.get(rid)
++            if seq is None:
++                continue
++            _fh.write(f'{locus_id}\t{contig}\t{start}\t{end}\t{motif}\t'
++                      f'{names.get(rid, ".")}\t{aidx}\t{len(seq[0])}\t{method}\n')
++
++
++def close():
++    global _fh
++    if _fh is not None:
++        _fh.close()
++        _fh = None
