@@ -1,0 +1,33 @@
+##fileformat=VCFv4.2
+##FILTER=<ID=PASS,Description="All filters passed">
+##command=ATaRVa_0.7.1 /opt/homebrew/Caskroom/miniconda/base/envs/atarva/bin/atarva genotype -f test_data/test_ref.fasta -b test_data/test_reads.bam -r test_data/test_region.bed.gz --loci-wise --read-dump -o mytest.vcf
+##contig=<ID=chr4,length=2093>
+##contig=<ID=chrX,length=2062>
+##FILTER=<ID=LESS_READS,Description="Read depth below threshold">
+##INFO=<ID=AC,Number=A,Type=Integer,Description="Number of alternate alleles in called genotypes">
+##INFO=<ID=AN,Number=1,Type=Integer,Description="Number of alleles in called genotypes">
+##INFO=<ID=MOTIF,Number=1,Type=String,Description="Repeat motif">
+##INFO=<ID=START,Number=1,Type=Integer,Description="Start position of the repeat region in 0-based coordinate system">
+##INFO=<ID=END,Number=1,Type=Integer,Description="End position of the repeat region">
+##INFO=<ID=ID,Number=1,Type=String,Description="Locus identifier tag">
+##INFO=<ID=REFCN,Number=1,Type=Integer,Description="Reference allele copy number">
+##INFO=<ID=CT,Number=1,Type=String,Description="Cluster type">
+##INFO=<ID=EAC,Number=1,Type=String,Description="Each Allele Count">
+##INFO=<ID=MPC,Number=1,Type=String,Description="0.5">
+##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+##FORMAT=<ID=AL,Number=2,Type=Integer,Description="Allele length in base pairs">
+##FORMAT=<ID=CN,Number=2,Type=Integer,Description="Motif copy number for each allele">
+##FORMAT=<ID=LPM,Number=2,Type=String,Description="Longest pure motif repeat and its copy number for each allele">
+##FORMAT=<ID=AR,Number=.,Type=String,Description="Allele length range">
+##FORMAT=<ID=SD,Number=.,Type=Integer,Description="Number of reads supporting for the alleles">
+##FORMAT=<ID=PC,Number=2,Type=Integer,Description="Number of reads in the phased cluster for each allele">
+##FORMAT=<ID=DP,Number=1,Type=Integer,Description="Number of the supporting reads for the repeat locus">
+##FORMAT=<ID=SN,Number=.,Type=Integer,Description="Number of SNPs used for phasing">
+##FORMAT=<ID=SQ,Number=.,Type=Float,Description="Phred-scale qualities of the SNPs used for phasing">
+##FORMAT=<ID=MA,Number=.,Type=Float,Description="Mean methylation level for each allele">
+##FORMAT=<ID=MR,Number=.,Type=Integer,Description="Number of reads providing methylation info for each allele">
+##FORMAT=<ID=DS,Number=A,Type=String,Description="Motif decomposed sequence">
+##FORMAT=<ID=MV,Number=.,Type=String,Description="Visual methylation encodings for the alleles">
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	test_reads
+chr4	1001	.	CAGCAGCAGCAGCAGCAGCAGCAGCAGCAGCAGCAGCAGCAGCAGCAGCAGCAGCAGCAACAGCCGCCACCGCCGCCGCCGCCGCCGCCGCCT	CAGCAGCAGCAGCAGCAGCAGCAGCAGCAGCAGCAGCAGCAGCAGCAGCAGCAGCAGCAGCAGCAGCAGCAGCAACAGCCGCCACCGCCGCCGCCGCCGCCGCCGCCT,CAGCAGCAGCAGCAGCAGCAGCAGCAGCAGCAGCAGCAGCAGCAGCAGCAGCAACAGCCGCCACCGCCGCCGCCGCCGCCGCCGCCT	0	PASS	AC=1,1;AN=2;MOTIF=CAG;START=1000;END=1093;ID=HD_HTT;REFCN=31	GT:AL:CN:LPM:AR:SD:DP:SN:SQ:MA:MR:DS:MV	1|2:108,87:36,29:.,.:104-111,84-87:30,18:48:.:.:0.0,0.01:27,18:.,.:.,.
+chrX	1001	.	GCGGCGGCGGCGGCGGCGGCGGCGGCGGCGGAGGCGGCGGCGGCGGCGGCGGCGGCGGCGGC	GCGGCGGCGGCGGCGGCGGCGGCGGCGGCGGAGGCGGCGGCGGCGGCGGCGGCGGCGGCGGAGGCGGCGGCGGCGGCGGCGGCGGCGGCGGCGGC,GCGGCGGCGGCGGCGGCGGCGGCGGCGGCGGAGGCGGCGGCGGCGGCGGCGGCGGCGGCGGAGGCGGCGGCGGCGGCGGCGGCGGCGGCGGCGGCGGC	0	PASS	AC=1,1;AN=2;MOTIF=CGG;START=1000;END=1062;ID=FXS_FMR1;REFCN=20	GT:AL:CN:LPM:AR:SD:DP:SN:SQ:MA:MR:DS:MV	1|2:95,98:31,32:.,.:95-95,98-98:23,3:27:.:.:0.0,0.04:22,3:.,.:.,.

@@ -1,4 +1,5 @@
 from ATARVA.snp_utils import haplocluster_reads
+from ATARVA import readdump
 from ATARVA.vcf_writer import *
 from ATARVA.sub_operation_utils import *
 from ATARVA.somatic_utils import *
@@ -12,6 +13,7 @@ import stringzilla as sz
 def homo_vcf_call(alen, read_seqs, haplotypes, DP, amplicon, motif_size, ref, contig, locus_key, global_loci_info, global_loci_variations, out, log_bool, decomp, hallele_counter, tag):
 
     lower1,upper1 = confidence_interval(alen)
+    readdump.write(contig, locus_key, global_loci_info, global_loci_variations, [haplotypes], tag)
     allele_range = f'{lower1}-{upper1},{lower1}-{upper1}'
     ALT, allele_length, decomp_seq, repeativity = alt_sequence(read_seqs, haplotypes, amplicon, motif_size)
     if repeativity:
@@ -28,6 +30,8 @@ def hetero_vcf_call(haplotypes, read_seqs, amplicon, motif_size, new_alen, conti
     phased_read = ['.','.']
     chosen_snpQ = '.'
     snp_num = '.'        
+
+    readdump.write(contig, locus_key, global_loci_info, global_loci_variations, haplotypes, tag)
 
     genotypes = []
     allele_count = []
@@ -450,6 +454,8 @@ def analyse_genotype(contig, locus_key, global_loci_info,
             min_idx += 1
         del sorted_global_snp_list[:min_idx]
 
+
+    readdump.write(contig, locus_key, global_loci_info, global_loci_variations, haplotypes, 'SNP')
 
     genotypes = []
     allele_count = []

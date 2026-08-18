@@ -1,4 +1,5 @@
 from ATARVA.locus_utils import process_locus
+from ATARVA import readdump
 from ATARVA.cstag_utils import parse_cstag
 from ATARVA.cigar_utils import parse_cigar_tag
 from ATARVA.operation_utils import convert_eqx_read
@@ -48,6 +49,7 @@ def locus_processor(global_loci_keys, global_loci_ends, global_loci_variations, 
             else:
                 ALT = '.'
 
+            readdump.write(Chrom, locus_key, global_loci_info, global_loci_variations, [reads_of_homozygous], 'LENGTH')
             lower,upper = confidence_interval(homo_alen_list)
 
             if ALT != '.':
@@ -74,6 +76,7 @@ def locus_processor(global_loci_keys, global_loci_ends, global_loci_variations, 
                 }
                 tqdm.write(skip_messages.get(skip_point, 'Locus skipped due to less number of significant snps based on user\'s parameter.'))
         elif category == 3:
+            readdump.write(Chrom, locus_key, global_loci_info, global_loci_variations, haplotypes, 'SNP')
             genotypes = []
             allele_count = []
             ALT_seqs = []
@@ -137,6 +140,7 @@ def cooper(bam_file, tbx_file, ref_file, aln_format, contigs, mapq_threshold, ou
 
     # Open the output file
     out = open(out_filename, 'w')
+    readdump.init(outfile, tidx)
     
     # Write the VCF header if tidx is -1 or 0
     if tidx == -1 or tidx == 0:
@@ -356,7 +360,7 @@ def cooper(bam_file, tbx_file, ref_file, aln_format, contigs, mapq_threshold, ou
                     read_loci_variations[locus_key] = {'halen': locus_len, 'alen': locus_len, 'rlen': locus_len, 'seq': []}
 
                     if locus_key not in global_loci_variations:
-                        global_loci_variations[locus_key] = {'rlen': locus_len, 'reads': [], 'read_allele': {}, 'read_sequence': {}, 'read_tag':[], 'read_meth': {}}
+                        global_loci_variations[locus_key] = {'rlen': locus_len, 'reads': [], 'read_allele': {}, 'read_sequence': {}, 'read_name': {}, 'read_tag':[], 'read_meth': {}}
                         global_loci_info[locus_key] = row
 
                         # adding the locus key when it is first encountered
@@ -459,6 +463,7 @@ def cooper(bam_file, tbx_file, ref_file, aln_format, contigs, mapq_threshold, ou
                 global_loci_variations[locus_key]['reads'].append(read_index)
                 global_loci_variations[locus_key]['read_allele'][read_index] = [read_loci_variations[locus_key]['halen'], read_loci_variations[locus_key]['alen']]
                 global_loci_variations[locus_key]['read_sequence'][read_index] = read_loci_variations[locus_key]['seq']
+                global_loci_variations[locus_key]['read_name'][read_index] = read.query_name
                 global_loci_variations[locus_key]['read_tag'].append(hp_tag)
 
         while global_loci_ends:
@@ -483,6 +488,7 @@ def cooper(bam_file, tbx_file, ref_file, aln_format, contigs, mapq_threshold, ou
     bam.close()
     ref.close()
     tbx.close()
+    readdump.close()
     out.close()
 
 
@@ -510,6 +516,7 @@ def mini_cooper(bam_file, tbx_file, ref_file, aln_format, contigs, mapq_threshol
     
     # Open the output file
     out = open(out_filename, 'w')
+    readdump.init(outfile, tidx)
     
     # Write the VCF header if tidx is -1 or 0
     if tidx == -1 or tidx == 0:
@@ -681,7 +688,7 @@ def mini_cooper(bam_file, tbx_file, ref_file, aln_format, contigs, mapq_threshol
                     read_loci_variations[locus_key] = {'halen': locus_len, 'alen': locus_len, 'rlen': locus_len, 'seq': []}
 
                     if locus_key not in global_loci_variations:
-                        global_loci_variations[locus_key] = {'rlen': locus_len, 'reads': [], 'read_allele': {}, 'read_sequence': {}, 'read_tag':[], 'read_meth': {}}
+                        global_loci_variations[locus_key] = {'rlen': locus_len, 'reads': [], 'read_allele': {}, 'read_sequence': {}, 'read_name': {}, 'read_tag':[], 'read_meth': {}}
                         global_loci_info[locus_key] = row
                         global_loci_ends.append(locus_end)
                         global_loci_keys.append(locus_key)
@@ -777,6 +784,7 @@ def mini_cooper(bam_file, tbx_file, ref_file, aln_format, contigs, mapq_threshol
                     global_loci_variations[locus_key]['reads'].append(read_index)
                     global_loci_variations[locus_key]['read_allele'][read_index] = [read_loci_variations[locus_key]['halen'], read_loci_variations[locus_key]['alen']]
                     global_loci_variations[locus_key]['read_sequence'][read_index] = read_loci_variations[locus_key]['seq']
+                    global_loci_variations[locus_key]['read_name'][read_index] = read.query_name
                     global_loci_variations[locus_key]['read_tag'].append(hp_tag)
             
             while global_loci_ends:
@@ -816,4 +824,5 @@ def mini_cooper(bam_file, tbx_file, ref_file, aln_format, contigs, mapq_threshol
     ref.close()
     tbx.close()
     tbx2.close()
+    readdump.close()
     out.close()

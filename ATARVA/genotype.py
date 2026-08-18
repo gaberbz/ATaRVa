@@ -46,6 +46,7 @@ def genotype_parser(subparsers):
     optional.add_argument('--amplicon', action='store_true', help="genotype mode for targeted-sequenced samples. In this mode, the default values for `max-reads` and `flank` values are 1000 and 20 respectively. [default: False]")
     optional.add_argument('--somatic', action='store_true', help="genotype mode for capturing mosaicism in samples. In this mode, default `max-reads` and `flank` values are same as amplicon mode. [default: False]")
     optional.add_argument('--read-wise', action='store_true', help="Read-wise genotyping mode for BED file with dense regions. [default: False]")
+    optional.add_argument('--read-dump', action='store_true', help="write a per-read TSV (read name, allele cluster, allele length) alongside the VCF. [default: False]")
     optional.add_argument('--loci-wise', action='store_true', help="Loci-wise genotyping mode instead of Read-wise for BED file with sparse regions. [default: False]")
     optional.add_argument('-log', '--debug_mode', action='store_true', help="write the debug messages to log file. [default: False]")
     optional.add_argument('-v', '--version', action='version', version=f'ATaRVa version {__version__}')
@@ -297,6 +298,9 @@ def genotype_run(args):
 
         amplicon = False
         somatic = False
+        if args.read_dump:
+            os.environ['ATARVA_READ_DUMP'] = '1'
+
         if args.amplicon:
             amplicon = True
             srs = True
@@ -353,6 +357,19 @@ def genotype_run(args):
                         print(*repeat_info, file=out, sep='\t')
                 os.remove(thread_out)
             out.close()
+
+            if args.read_dump:
+                dump_out = open(f'{out_file}.reads.tsv', 'a')
+                for tidx in range(threads)[1:]:
+                    thread_dump = f'{hid_outfile}_thread_{tidx}.reads.tsv'
+                    if not os.path.exists(thread_dump):
+                        continue
+                    with open(thread_dump, 'r') as fh:
+                        for line in fh:
+                            dump_out.write(line)
+                    os.remove(thread_dump)
+                dump_out.close()
+
             print('Concatenation completed!! ^_^', file=sys.stderr)
 
             if args.debug_mode:
